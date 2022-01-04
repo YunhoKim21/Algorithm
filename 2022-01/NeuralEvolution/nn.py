@@ -1,3 +1,5 @@
+#homemake NeralNet class for practice
+
 import numpy as np
 import random
 
@@ -13,7 +15,10 @@ def randomize(x, e):
 
 def activation(x):   
     return 1/(1+np.exp(-x))
-        
+
+def activationPrime(x):
+    return np.exp(-x) / (1 + np.exp(-x)) ** 2
+
 class NeuralNetwork:
 
     def __init__(self, input, hidden, output):
@@ -29,7 +34,40 @@ class NeuralNetwork:
     def describe(self):
         print(self.w1, self.w2, self.b1, self.b2)
 
+    def calculateGrad(self, x, y):
+        a1 = np.dot(self.w1, x) + self.b1
+        z1 = activation(a1)
+        a2 = np.dot(self.w2, z1) + self.b2
+        z2 = activation(a2)
+
+        b2grad = 2 * (z2 - y) * activationPrime(a2)
+        w2grad = z1.transpose() * activationPrime(a2) * 2 * (z2 - y)
+        a1gradmat = self.w2.transpose() * (z2.transpose() - y.transpose()) * 2 * activationPrime(a2.transpose())
+        z1grad = np.array([a1gradmat.sum(axis = 1)]).transpose()
+
+        w1grad = [[0 for i in range(self.dim[0])] for j in range(self.dim[1])]
+
+        return w1grad, w2grad, b1grad, b2grad
+    
+    def backpropagate(self, x, y, lr = 0.01):
+        w1grad = np.array([[0. for i in range(self.dim[0])] for j in range(self.dim[1])])
+        w2grad = np.array([[0. for i in range(self.dim[1])] for j in range(self.dim[2])])
+        b1grad = np.array([[0.] for j in range(self.dim[1])])
+        b2grad = np.array([[0.] for i in range(self.dim[2])])
+
+        for i in range(len(x)):
+            grad = self.calculateGrad(x[i], y[i])
+            w1grad += grad[0]; w2grad += grad[1]; b1grad += grad[2]; b2grad += grad[3]
+
+        self.w1 -= lr * w1grad / len(x)
+        self.w2 -= lr * w2grad / len(x)
+        
+        self.b2 -= lr * b2grad / len(x)
+        print(self.cost(x, y))
+        self.b1 -= lr * b1grad / len(x)
+
     def predict(self, x):
+        print(x)
         data = np.array(x)
         temp1 = np.dot(self.w1, x) + self.b1
         h = activation(temp1)
@@ -44,6 +82,15 @@ class NeuralNetwork:
 
         return new
 
+    def cost(self, x, y):
+        
+        s = 0
+        for i in range(len(x)):
+            pred = self.predict(x[i])
+            squaredError = (pred - y[i]) ** 2
+            s += sum(squaredError)
+        return s/len(x)
+            
 
     def mutate(self, e):
         neww1 = randomize(self.w1, e)
@@ -57,8 +104,10 @@ class NeuralNetwork:
         self.b2 = newb2
 
 if __name__ == '__main__':
-    test = NeuralNetwork(2, 2, 1)
-    print('pred1:', test.predict([[1], [0]]))
-    test.mutate()
-    print('pred2:', test.predict([[1], [0]]))
-    test.describe()
+    x = np.array( [[[0.1], [0.4], [0,2], [0.1]]], dtype = object)
+    print(x)
+    y = np.array([[[0.1], [0.2]]])
+    test = NeuralNetwork(4, 3, 2)
+    print(test.cost(x, y))
+    test.backpropagate(x, y)
+    print(test.cost(x, y))
