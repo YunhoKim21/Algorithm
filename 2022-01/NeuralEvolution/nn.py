@@ -42,14 +42,13 @@ class NeuralNetwork:
 
         b2grad = 2 * (z2 - y) * activationPrime(a2)
         w2grad = z1.transpose() * activationPrime(a2) * 2 * (z2 - y)
-        a1gradmat = self.w2.transpose() * (z2.transpose() - y.transpose()) * 2 * activationPrime(a2.transpose())
-        z1grad = np.array([a1gradmat.sum(axis = 1)]).transpose()
-
-        w1grad = [[0 for i in range(self.dim[0])] for j in range(self.dim[1])]
+        a1gradmat = self.w2.transpose() * (z2.transpose() - y.transpose()) * 2 * activationPrime(a2.transpose()) * activationPrime(a1)
+        b1grad = np.array([a1gradmat.sum(axis = 1)]).transpose()
+        w1grad = b1grad * x.transpose()
 
         return w1grad, w2grad, b1grad, b2grad
     
-    def backpropagate(self, x, y, lr = 0.01):
+    def backpropagate(self, x, y, lr = 0.1):
         w1grad = np.array([[0. for i in range(self.dim[0])] for j in range(self.dim[1])])
         w2grad = np.array([[0. for i in range(self.dim[1])] for j in range(self.dim[2])])
         b1grad = np.array([[0.] for j in range(self.dim[1])])
@@ -63,12 +62,9 @@ class NeuralNetwork:
         self.w2 -= lr * w2grad / len(x)
         
         self.b2 -= lr * b2grad / len(x)
-        print(self.cost(x, y))
         self.b1 -= lr * b1grad / len(x)
 
     def predict(self, x):
-        print(x)
-        data = np.array(x)
         temp1 = np.dot(self.w1, x) + self.b1
         h = activation(temp1)
         return activation(np.dot(self.w2, h)+self.b2)
@@ -104,10 +100,10 @@ class NeuralNetwork:
         self.b2 = newb2
 
 if __name__ == '__main__':
-    x = np.array( [[[0.1], [0.4], [0,2], [0.1]]], dtype = object)
-    print(x)
-    y = np.array([[[0.1], [0.2]]])
+    x = np.array([[[0], [1], [2], [3]], [[2], [3], [4], [5]]])
+    y = np.array([[[0], [1]], [[1], [0]]])
     test = NeuralNetwork(4, 3, 2)
     print(test.cost(x, y))
-    test.backpropagate(x, y)
-    print(test.cost(x, y))
+    for i in range(1000):
+        test.backpropagate(x, y)
+    print(test.predict(x[0]))

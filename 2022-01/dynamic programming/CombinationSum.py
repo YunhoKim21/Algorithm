@@ -17,7 +17,7 @@ def find(candidate, target):
 
         recursion = find(candidate, target - i*t)
         if type(recursion) != type(True):
-            
+            print(recursion + [t] * i)
             ret.append(recursion + [t] * i)
         
         i += 1
@@ -26,4 +26,4 @@ def find(candidate, target):
 def combinationSum(candidates, target):
     return find(candidates, target)
 
-print(combinationSum([2,3, 6, 7], 7))
+print(combinationSum([2, 3, 6, 7], 7))
